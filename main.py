@@ -1,0 +1,1 @@
+from src.objects.factory import create_app
