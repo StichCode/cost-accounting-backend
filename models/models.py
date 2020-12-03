@@ -1,5 +1,6 @@
 import enum
 
+from models.base import BaseModel
 from src.objects.factory import db
 
 
@@ -14,14 +15,14 @@ tags = db.Table('tags',
                 )
 
 
-class Tag(db.Model):
+class Tag(BaseModel, db.Model):
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name_tag = db.Column(db.String, unique=True, nullable=False)
     description = db.Column(db.String, nullable=False)
 
 
-class Accounting(db.Model):
+class Accounting(BaseModel, db.Model):
     __tablename__ = "accounting"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     data = db.Column(db.DateTime, nullable=False)
