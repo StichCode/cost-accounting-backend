@@ -3,6 +3,7 @@ from loguru import logger
 
 from models.models import Accounting, Tag
 from src.api import bp
+from models.base import put_accounting, put_tag, to_dict_all
 
 
 @bp.route('/api/v1/accounting', methods=["POST"])
@@ -11,7 +12,7 @@ def put():
     if not data:
         logger.error("backend didn't receive data")
         return jsonify(message="something wrong, where data?"), 400
-    response = Accounting.from_dict(data)
+    response = put_accounting(data)
     if not response:
         logger.exception("ALARM, something wrong, and no data has been added")
         return jsonify(message="something wrong when add new record"), 401
@@ -24,7 +25,7 @@ def put_tags():
     if not data:
         logger.error("backend didn't receive data")
         return jsonify(message="something wring, where data?"), 400
-    response = Tag.from_dict(data)
+    response = put_tag(data)
     if not response:
         logger.exception("ALARM, something wrong, and no data has been added")
         return jsonify(message="something wrong when add new record"), 401
@@ -33,7 +34,7 @@ def put_tags():
 
 @bp.route('/api/v1/accounting', methods=["GET"])
 def get_accounting():
-    response = Accounting.to_dict_all()
+    response = to_dict_all(Accounting)
     if not response:
         logger.exception("ALARM, something wrong, and user received no data")
         return jsonify({"message": "Something wrong when read from database"}), 403
@@ -42,7 +43,7 @@ def get_accounting():
 
 @bp.route('/api/v1/tags', methods=["GET"])
 def get_tags():
-    response = Tag.to_dict_all()
+    response = to_dict_all(Tag)
     if not response:
         logger.exception("ALARM, something wrong, and user received no data")
         return jsonify({"message": "Something wrong when read from database"}), 403

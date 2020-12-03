@@ -1,36 +1,54 @@
+import ast
+from typing import List
+
 from loguru import logger
-from sqlalchemy.exc import IntegrityError
 
-from models.func import get_all, add_instance
+from models.func import get_one_by_id, add_instance, get_all
+from models.models import Accounting, Tag
+from src.objects.factory import db
 
 
-class BaseModel(object):
+def to_dict_all(model):
+    try:
+        return [r.to_dict() for r in get_all(model)]
+    except Exception as ex:
+        logger.exception(ex)
+        return None
 
-    def to_dict(self):
-        data = {}
-        for attr, column in self.__mapper__.c.items():
-            data[column.key] = getattr(self, attr)
-        return data
 
-    @classmethod
-    def to_dict_all(cls):
-        try:
-            return [r.to_dict() for r in get_all(cls)]
-        except Exception as ex:
-            logger.exception(ex)
-            return None
+def put_accounting(data) -> bool:
+    _tags = _get_tags(ast.literal_eval(data["tags"]))
+    _acc = {
+        "data": data["data"],
+        "type_accounting": data["type_accounting"],
+        "description": data["description"],
+        "sum": data["sum"]
+    }
+    logger.debug("Insert a new record \n{}".format(_acc))
+    try:
+        acc = Accounting(**_acc)
+        [acc.tags.append(t) for t in _tags]  # добавляем теги при связи M2M
+        db.session.add(acc)
+        db.session.commit()
+    except Exception as ex:
+        logger.exception(ex)
+        return False
+    return True
 
-    @classmethod
-    def from_dict(cls, data: dict):
-        result = {}
-        keys = [column.key for _, column in cls.__mapper__.c.items()]
-        for field in keys:
-            if field == "id":
-                continue
-            elif field in data:
-                result[field] = data[field]
-        try:
-            add_instance(cls, **result)
-        except IntegrityError:
-            return False
-        return True
+
+def _get_tags(tags_id: List[int]) -> List[Tag]:
+    return [get_one_by_id(Tag, tag) for tag in tags_id]
+
+
+def put_tag(data) -> bool:
+    _tag = {
+        "name_tag": data["name_tag"],
+        "description": data["description"]
+    }
+    logger.debug("Insert a new record \n{}".format(_tag))
+    try:
+        add_instance(Tag, **_tag)
+    except Exception as ex:
+        logger.exception(ex)
+        return False
+    return True
